@@ -6,7 +6,7 @@ from scipy.spatial import distance
 from imutils import face_utils
 from keras.models import load_model
 from utils.fr_utils import *
-from utils.inception_blocks_v2 import *
+from utils.inception_blocks import *
 
 detector = dlib.get_frontal_face_detector()
 
