@@ -1,11 +1,11 @@
 from keras import backend as K
 from keras.layers import Conv2D, ZeroPadding2D, Activation, Input, concatenate
 from keras.models import Model
-from keras.layers.normalization import BatchNormalization
+from keras.layers import BatchNormalization
 from keras.layers.pooling import MaxPooling2D, AveragePooling2D
-from utils import fr_utils
 from keras.layers.core import Lambda, Flatten, Dense
 
+from . import fr_utils
 
 def inception_block_1a(X):
     """
@@ -19,7 +19,7 @@ def inception_block_1a(X):
     X_3x3 = Conv2D(128, (3, 3), data_format='channels_first', name='inception_3a_3x3_conv2')(X_3x3)
     X_3x3 = BatchNormalization(axis=1, epsilon=0.00001, name='inception_3a_3x3_bn2')(X_3x3)
     X_3x3 = Activation('relu')(X_3x3)
-    
+
     X_5x5 = Conv2D(16, (1, 1), data_format='channels_first', name='inception_3a_5x5_conv1')(X)
     X_5x5 = BatchNormalization(axis=1, epsilon=0.00001, name='inception_3a_5x5_bn1')(X_5x5)
     X_5x5 = Activation('relu')(X_5x5)
@@ -34,12 +34,13 @@ def inception_block_1a(X):
     X_pool = Activation('relu')(X_pool)
     X_pool = ZeroPadding2D(padding=((3, 4), (3, 4)), data_format='channels_first')(X_pool)
 
+
     X_1x1 = Conv2D(64, (1, 1), data_format='channels_first', name='inception_3a_1x1_conv')(X)
     X_1x1 = BatchNormalization(axis=1, epsilon=0.00001, name='inception_3a_1x1_bn')(X_1x1)
     X_1x1 = Activation('relu')(X_1x1)
-        
+
     # CONCAT
-    inception = concatenate([X_3x3, X_5x5, X_pool, X_1x1], axis=1)
+    inception = concatenate([X_3x3, X_5x5, X_pool, X_1x1], axis = 1)
 
     return inception
 
@@ -70,7 +71,7 @@ def inception_block_1b(X):
     X_1x1 = BatchNormalization(axis=1, epsilon=0.00001, name='inception_3b_1x1_bn')(X_1x1)
     X_1x1 = Activation('relu')(X_1x1)
 
-    inception = concatenate([X_3x3, X_5x5, X_pool, X_1x1], axis=1)
+    inception = concatenate([X_3x3, X_5x5, X_pool, X_1x1], axis = 1)
 
     return inception
 
@@ -96,7 +97,7 @@ def inception_block_1c(X):
     X_pool = MaxPooling2D(pool_size=3, strides=2, data_format='channels_first')(X)
     X_pool = ZeroPadding2D(padding=((0, 1), (0, 1)), data_format='channels_first')(X_pool)
 
-    inception = concatenate([X_3x3, X_5x5, X_pool], axis=1)
+    inception = concatenate([X_3x3, X_5x5, X_pool], axis = 1)
 
     return inception
 
@@ -128,7 +129,7 @@ def inception_block_2a(X):
                                layer='inception_4a_1x1',
                                cv1_out=256,
                                cv1_filter=(1, 1))
-    inception = concatenate([X_3x3, X_5x5, X_pool, X_1x1], axis=1)
+    inception = concatenate([X_3x3, X_5x5, X_pool, X_1x1], axis = 1)
 
     return inception
 
@@ -154,7 +155,7 @@ def inception_block_2b(X):
     X_pool = MaxPooling2D(pool_size=3, strides=2, data_format='channels_first')(X)
     X_pool = ZeroPadding2D(padding=((0, 1), (0, 1)), data_format='channels_first')(X_pool)
 
-    inception = concatenate([X_3x3, X_5x5, X_pool], axis=1)
+    inception = concatenate([X_3x3, X_5x5, X_pool], axis = 1)
 
     return inception
 
@@ -178,7 +179,7 @@ def inception_block_3a(X):
                                cv1_out=256,
                                cv1_filter=(1, 1))
 
-    inception = concatenate([X_3x3, X_pool, X_1x1], axis=1)
+    inception = concatenate([X_3x3, X_pool, X_1x1], axis = 1)
 
     return inception
 
@@ -202,7 +203,7 @@ def inception_block_3b(X):
                                layer='inception_5b_1x1',
                                cv1_out=256,
                                cv1_filter=(1, 1))
-    inception = concatenate([X_3x3, X_pool, X_1x1], axis=1)
+    inception = concatenate([X_3x3, X_pool, X_1x1], axis = 1)
 
     return inception
 
@@ -218,36 +219,31 @@ def faceRecoModel(input_shape):
         
     # Define the input as a tensor with shape input_shape
     X_input = Input(input_shape)
-
-    # Zero-Padding
-    X = ZeroPadding2D((3, 3))(X_input)
     
-    # First Block
-    X = Conv2D(64, (7, 7), strides = (2, 2), name = 'conv1')(X)
+    # Zero-Padding
+    X = ZeroPadding2D((3, 3), data_format='channels_first')(X_input)
+
+    # first Block
+    X = Conv2D(64, (7, 7), strides = (2, 2), name = 'conv1', data_format='channels_first')(X)
     X = BatchNormalization(axis = 1, name = 'bn1')(X)
     X = Activation('relu')(X)
-    
+
     # Zero-Padding + MAXPOOL
-    X = ZeroPadding2D((1, 1))(X)
-    X = MaxPooling2D((3, 3), strides = 2)(X)
-    
+    X = ZeroPadding2D((1, 1), data_format='channels_first')(X)
+    X = MaxPooling2D((3, 3), strides = 2, data_format='channels_first')(X)
     # Second Block
-    X = Conv2D(64, (1, 1), strides = (1, 1), name = 'conv2')(X)
+    X = Conv2D(64, (1, 1), strides = (1, 1), name = 'conv2', data_format='channels_first')(X)
     X = BatchNormalization(axis = 1, epsilon=0.00001, name = 'bn2')(X)
     X = Activation('relu')(X)
-    
     # Zero-Padding + MAXPOOL
-    X = ZeroPadding2D((1, 1))(X)
-
+    X = ZeroPadding2D((1, 1), data_format='channels_first')(X)
     # Second Block
-    X = Conv2D(192, (3, 3), strides = (1, 1), name = 'conv3')(X)
+    X = Conv2D(192, (3, 3), strides = (1, 1), name = 'conv3', data_format='channels_first')(X)
     X = BatchNormalization(axis = 1, epsilon=0.00001, name = 'bn3')(X)
     X = Activation('relu')(X)
-    
     # Zero-Padding + MAXPOOL
-    X = ZeroPadding2D((1, 1))(X)
-    X = MaxPooling2D(pool_size = 3, strides = 2)(X)
-    
+    X = ZeroPadding2D((1, 1), data_format='channels_first')(X)
+    X = MaxPooling2D(pool_size = 3, strides = 2, data_format='channels_first')(X)
     # Inception 1: a/b/c
     X = inception_block_1a(X)
     X = inception_block_1b(X)
@@ -268,6 +264,7 @@ def faceRecoModel(input_shape):
     
     # L2 normalization
     X = Lambda(lambda  x: K.l2_normalize(x,axis=1))(X)
+    print("--------------------------------",X.shape)
 
     # Create model instance
 
