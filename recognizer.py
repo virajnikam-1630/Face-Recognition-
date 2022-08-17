@@ -7,10 +7,13 @@ from imutils import face_utils
 from keras.models import load_model
 from utils.fr_utils import *
 from utils.inception_blocks import *
+from train_inception import triplet_loss
+import keras.backend as K
+K.set_image_data_format('channels_last')
 
 detector = dlib.get_frontal_face_detector()
 
-FRmodel = load_model('models/face-rec_Google.h5')
+FRmodel = load_model('models/face-rec_Google.h5', custom_objects = {"triplet_loss" : triplet_loss})
 print("Total Params:", FRmodel.count_params())
 predictor = dlib.shape_predictor("models/shape_predictor_68_face_landmarks.dat")
 thresh = 0.25
@@ -26,13 +29,14 @@ def eye_aspect_ratio(eye):
 def recognize_face(face_descriptor, database):
     encoding = img_to_encoding(face_descriptor, FRmodel)
     min_dist = 100
-    identity = None
-
+    identity = "None_of_the_above"
+   
     # Loop over the database dictionary's names and encodings.
     for (name, db_enc) in database.items():
 
         # Compute L2 distance between the target "encoding" and the current "emb" from the database.
         dist = np.linalg.norm(db_enc - encoding)
+
 
         print('distance for %s is %s' % (name, dist))
 
@@ -41,10 +45,8 @@ def recognize_face(face_descriptor, database):
             min_dist = dist
             identity = name
 
-    if int(identity) <=4:
-        return str('Akshay'), min_dist
-    if int(identity) <=8:
-        return str('Apoorva'), min_dist
+
+    return identity, min_dist
 
 
 
@@ -70,16 +72,23 @@ def initialize():
     #load_weights_from_FaceNet(FRmodel)
     #we are loading model from keras hence we won't use the above method
     database = {}
-
+    print("==============================================================================")
+    
     # load all the images of individuals to recognize into the database
-    for file in glob.glob("images/*"):
+    for file in glob.glob("C://Users/hp/Desktop/Projects/Face_Recognition/incept/*/*"):
         identity = os.path.splitext(os.path.basename(file))[0]
+        print("---------------------------------------------------------------------------",identity)
         database[identity] = fr_utils.img_path_to_encoding(file, FRmodel)
     return database
 
 
 def recognize():
+    print("*******************************************************************")
     database = initialize()
+    print("////////////////")
+    for (name, db_enc) in database.items():
+        print(name)
+
     cap = cv2.VideoCapture(0)
     (lStart, lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
     (rStart, rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
